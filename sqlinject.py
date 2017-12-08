@@ -22,11 +22,18 @@ with open('negative.txt', 'r',encoding='utf-8') as f:
 
 
 # initial the labels
-label_positive=np.ones(len(data_positive))
-label_negative=np.zeros(len(data_negative))
+label_positive=np.ones(len(data_positive.split('\n')))
+label_negative=np.zeros(len(data_negative.split('\n')))
 
 
 # In[4]:
+
+
+print(len(label_positive))
+print(len(label_negative))
+
+
+# In[5]:
 
 
 #the char of train
@@ -35,20 +42,20 @@ vocab = sorted(charList, key=lambda x:x)
 vocab_to_int = {word: ii for ii, word in enumerate(vocab, 1)}
 
 
-# In[5]:
+# In[6]:
 
 
 #ints of positive
 ints_positive=[]
 for index,each in enumerate(data_positive.split('\n')):
-    ints_positive.append([vocab_to_int[word] for word in each.rstrip()])
+    ints_positive.append([vocab_to_int[word] for word in each.rstrip() if word in vocab_to_int])
 #ints of negative
 ints_negative=[]
 for each in data_negative.split('\n'):
-    ints_negative.append([vocab_to_int[word] for word in each.rstrip()])
+    ints_negative.append([vocab_to_int[word] for word in each.rstrip() if word in vocab_to_int])
 
 
-# In[6]:
+# In[7]:
 
 
 #statistics of the positive
@@ -63,7 +70,7 @@ print("Zero-length negative: {}".format(negative_lens[0]))
 print("Maximum negative length: {}".format(max(negative_lens)))
 
 
-# In[7]:
+# In[8]:
 
 
 #delete zero-length
@@ -76,12 +83,13 @@ print(len(non_zero_idx_negative))
 
 ints_positive = [ints_positive[ii] for ii in non_zero_idx_positive]
 label_positive = np.array([label_positive[ii] for ii in non_zero_idx_positive])
-
+print(len(label_positive))
 ints_negative = [ints_negative[ii] for ii in non_zero_idx_negative]
 label_negative = np.array([label_negative[ii] for ii in non_zero_idx_negative])
+print(len(label_negative))
 
 
-# In[8]:
+# In[9]:
 
 
 # length of th sequence
@@ -96,7 +104,7 @@ for i, row in enumerate(ints_negative):
     features_negative[i, -len(row):] = np.array(row)[:seq_len]
 
 
-# In[9]:
+# In[10]:
 
 
 #split the train set and test set  (undo)
@@ -113,7 +121,7 @@ val_x, test_x = val_x[:test_idx], val_x[test_idx:]
 val_y, test_y = val_y[:test_idx], val_y[test_idx:]
 
 
-# In[ ]:
+# In[11]:
 
 
 #shuffle
@@ -134,7 +142,7 @@ for index,indice in enumerate(indices_val):
     
 
 
-# In[17]:
+# In[12]:
 
 
 print("\t\t\tFeature Shapes:")
@@ -143,19 +151,27 @@ print("Train set: \t\t{}".format(train_x.shape),
       "\nTest set: \t\t{}".format(test_x.shape))
 
 
-# In[18]:
+# In[13]:
+
+
+print([train_x.shape,train_y.shape])
+print([val_x.shape,val_y.shape])
+print([test_x.shape,test_y.shape])
+
+
+# In[14]:
 
 
 #super param
 lstm_size = 256
 lstm_layers = 2
-batch_size = 1000
+batch_size = 500
 learning_rate = 0.001
 n_words = len(vocab_to_int) + 1 # Adding 1 because we use 0's for padding, dictionary started at 1
-epochs = 3
+epochs = 2
 
 
-# In[19]:
+# In[15]:
 
 
 # Create the graph object
@@ -167,14 +183,14 @@ with graph.as_default():
     keep_prob = tf.placeholder(tf.float32, name='keep_prob')
 
 
-# In[20]:
+# In[16]:
 
 
 # Size of the embedding vectors (number of units in the embedding layer)
 embed_size = 300 
 
 
-# In[21]:
+# In[17]:
 
 
 with graph.as_default():
@@ -182,7 +198,7 @@ with graph.as_default():
     embed = tf.nn.embedding_lookup(embedding, inputs_)
 
 
-# In[22]:
+# In[18]:
 
 
 with graph.as_default():
@@ -199,7 +215,7 @@ with graph.as_default():
     initial_state = cell.zero_state(batch_size, tf.float32)
 
 
-# In[23]:
+# In[19]:
 
 
 with graph.as_default():
@@ -207,7 +223,7 @@ with graph.as_default():
                                              initial_state=initial_state)
 
 
-# In[24]:
+# In[20]:
 
 
 with graph.as_default():
@@ -217,7 +233,7 @@ with graph.as_default():
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost)
 
 
-# In[25]:
+# In[21]:
 
 
 with graph.as_default():
@@ -225,7 +241,7 @@ with graph.as_default():
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 
-# In[26]:
+# In[ ]:
 
 
 def get_batches(x, y, batch_size=100):
@@ -236,7 +252,7 @@ def get_batches(x, y, batch_size=100):
         yield x[ii:ii+batch_size], y[ii:ii+batch_size]
 
 
-# In[27]:
+# In[ ]:
 
 
 with graph.as_default():
@@ -288,6 +304,30 @@ with tf.Session(graph=graph) as sess:
         batch_acc, test_state = sess.run([accuracy, final_state], feed_dict=feed)
         test_acc.append(batch_acc)
     print("Test accuracy: {:.3f}".format(np.mean(test_acc)))
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:
